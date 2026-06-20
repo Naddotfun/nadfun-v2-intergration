@@ -390,6 +390,7 @@ export const NADFUN_V2_MAINNET_VAULTS = {
   lpVault: "0xA1A5ea7c9490A25E715351Ddc66A7771e1817e66",
   creatorFeeVault: "0x687f9172D5F4798694811333C5C5696afCF4F6f4",
   giftVault: "0xa46A28558D77B1bF9dd98A451f78c43bE2545605",
+  dividendVault: "0xD6858E770aE97dF74B86BD5CddCd1Dd5D0c34BFC",
 } as const;
 
 export const NADFUN_V2_TESTNET_VAULTS = {
@@ -397,6 +398,7 @@ export const NADFUN_V2_TESTNET_VAULTS = {
   lpVault: "0x2acD9C75fe16c909237D9e6f080210D26c8c956D",
   creatorFeeVault: "0xfEB12B7698e296C57BBF9f0c9b38B3e908285A99",
   giftVault: "0xC112EB5C40FC9A22425300D232A31d00FF840ad0",
+  dividendVault: "0x3c90Dd4D78bD84aF7099D0ec34eFbbcA4e69ed2F",
 } as const;
 ```
 
@@ -416,3 +418,30 @@ Vaults:
 | `lpVault` | uses creator fees for liquidity and LP burn | `"0x"` |
 | `creatorFeeVault` | lets creator claim accumulated quote token | `abi.encode(address recipient)` |
 | `giftVault` | makes fees claimable by GitHub/X identity | `abi.encode(GiftTarget{platform, id})` |
+| `dividendVault` | splits creator fees into dividend tokens (bot-converted) and distributes to holders via Merkle claim | `abi.encode(address[] dividendTokens, uint16[] ratios, uint256 minBalance)` |
+
+`dividendVault.setupData` rules:
+
+- `dividendTokens.length` must be between 1 and 10, with no duplicates.
+- each token must be one of the supported categories below.
+- `ratios` is per-token basis points (`uint16`); each must be greater than 0 and the total must equal `10000`.
+- `minBalance` is the minimum source-token balance a holder must hold to claim a dividend.
+
+A dividend token is accepted when it is any of:
+
+- a quote token (WMON or LVMON);
+- a registered nad.fun V2 token;
+- a graduated nad.fun V1 token;
+- an allowlisted token from the curated list below.
+
+Allowlisted dividend tokens (managed on-chain via `DividendVault.setAllowedDividendToken`):
+
+| Symbol | Mainnet | Testnet |
+| --- | --- | --- |
+| USDC | `0x754704Bc059F8C67012fEd69BC8A327a5aafb603` | `0xe7046ecd03426cC22Cd298E4aBccB5086977E01B` |
+| USDT | `0xe7cd86e13AC4309349F30B3435a9d337750fC82D` | `0xcd6f528fd2E6119C1ec79A7e56ae579A8a554492` |
+| AUSD | `0x00000000eFE302BEAA2b3e6e1b18d08D69a9012a` | `0xEB937d6A4faa621bC4Ccf1A13c641e2f9272BE62` |
+| LV | `0x1001fF13bf368Aa4fa85F21043648079F00E1001` | `0x21E4d841e4a7E883b8921B3540dF54A5478fe1E4` |
+| XAUt0 | `0x01bFF41798a0BcF287b996046Ca68b395DbC1071` | `0x5BAA387e3AA23a489ab3b86dFc8A36336a655077` |
+
+Quote tokens (WMON, LVMON) and registered V2 / graduated V1 tokens are accepted without being on this allowlist.

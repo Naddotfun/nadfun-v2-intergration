@@ -178,8 +178,11 @@ export const NADFUN_V2_TESTNET_VAULTS = {
   lpVault: "0x2acD9C75fe16c909237D9e6f080210D26c8c956D",
   creatorFeeVault: "0xfEB12B7698e296C57BBF9f0c9b38B3e908285A99",
   giftVault: "0xC112EB5C40FC9A22425300D232A31d00FF840ad0",
+  dividendVault: "0x3c90Dd4D78bD84aF7099D0ec34eFbbcA4e69ed2F",
 } as const;
 ```
+
+Mainnet vault addresses are listed in `BONDING_CURVE_INTEGRATION.md`.
 
 Direct creator claim vault:
 
@@ -216,6 +219,31 @@ const vaults = [{
 ```
 
 `platform = 0` is GitHub. `platform = 1` is X.
+
+Dividend vault:
+
+```ts
+const vaults = [{
+  vault: NADFUN_V2_TESTNET_VAULTS.dividendVault,
+  bps: 10_000,
+  setupData: encodeAbiParameters(
+    [
+      { type: "address[]" }, // dividendTokens (1-10, no duplicates)
+      { type: "uint16[]" },  // ratios in bps, must total 10_000
+      { type: "uint256" },   // minBalance to claim a dividend
+    ],
+    [
+      [dividendTokenA, dividendTokenB],
+      [6_000, 4_000],
+      0n,
+    ],
+  ),
+}];
+```
+
+The dividend vault splits creator fees across the configured dividend tokens, a
+bot converts each slice, and holders claim their share via Merkle proof. See
+`BONDING_CURVE_INTEGRATION.md` for the full `setupData` rules.
 
 ## Exact-Input Trades
 
